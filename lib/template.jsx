@@ -1,4 +1,4 @@
-module.exports = function(source) {
+module.exports = function(source, that) {
 return function(h) {
 
 var rows = require('./template/rows.jsx')(h, this)
@@ -11,16 +11,19 @@ var pagination = require('./template/pagination.jsx')(h, this);
 var dropdownPaginationCount = require('./template/dropdown-pagination-count.jsx')(h, this);
 var headings = require('./template/headings.jsx')(h, this);
 var perPage = require('./template/per-page.jsx')(h, this);
+var perPageHolder = <span></span>;
+if(this.options.perPageEditable === undefined || this.options.perPageEditable === true)
+    perPageHolder = <div class="col-md-6">
+      {dropdownPagination}
+      {perPage}
+    </div>
 
 return <div class={"VueTables VueTables--" + this.source}>
   <div class="row">
     <div class="col-md-6">
       {normalFilter}
     </div>
-    <div class="col-md-6">
-      {dropdownPagination}
-      {perPage}
-    </div>
+    {perPageHolder}
   </div>
   <table class={'VueTables__table table ' + this.opts.skin}>
     <thead>
