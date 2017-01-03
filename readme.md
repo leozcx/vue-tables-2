@@ -9,6 +9,16 @@
   queryMap: {
     limit: 'size'
   }
+
+- headings: now support object (backward compitable, i.e. string is still supportted):
+
+```
+{
+  name: <string> //display name,
+  className: <name1, name2>
+}
+```
+  
   
 # readme from upstream
 
