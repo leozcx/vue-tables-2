@@ -12,6 +12,8 @@
 
 - headings: now support object (backward compitable, i.e. string is still supportted):
 
+- sortable: []: an empty array indicates that it won't sort any column by default
+
 ```
 {
   name: <string> //display name,
