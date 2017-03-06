@@ -9,7 +9,9 @@ module.exports = function () {
 
   var column = this.orderBy.column;
 
-  data.sort(this.getSortFn(column));
+  if (this.options.sortable && this.options.sortable.length > 0) {
+    data.sort(this.getSortFn(column));
+  }
 
   data = this.search(data);
 

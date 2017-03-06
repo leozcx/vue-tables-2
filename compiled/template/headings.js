@@ -1,29 +1,23 @@
-"use strict";
+'use strict';
 
 module.exports = function (h, that) {
 
   var sortControl = require('./sort-control')(h, that);
 
   var headings = [];
-
-  if (that.opts.childRow) headings.push(h(
-    "th",
-    null,
-    []
-  ));
-
   that.allColumns.map(function (column) {
+    var heading = that.getHeading(column);
     headings.push(h(
-      "th",
+      'th',
       {
         on: {
-          click: that.orderByColumn.bind(that, column)
+          'click': that.orderByColumn.bind(that, column)
         },
 
-        "class": that.sortableClass(column) },
+        'class': that.sortableClass(column) + ' ' + heading.className ? heading.className : '' },
       [h(
-        "span",
-        { "class": "VueTables__heading" },
+        'span',
+        { 'class': 'VueTables__heading' },
         [that.getHeading(column, h)]
       ), sortControl(column)]
     ));

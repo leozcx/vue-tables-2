@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function (source) {
+module.exports = function (source, that) {
   return function (h) {
 
     var rows = require('./template/rows')(h, this);
@@ -13,6 +13,16 @@ module.exports = function (source) {
     var dropdownPaginationCount = require('./template/dropdown-pagination-count')(h, this);
     var headings = require('./template/headings')(h, this);
     var perPage = require('./template/per-page')(h, this);
+    var perPageHolder = h(
+      'span',
+      null,
+      []
+    );
+    if (this.options.perPageEditable === undefined || this.options.perPageEditable === true) perPageHolder = h(
+      'div',
+      { 'class': 'col-md-6' },
+      [dropdownPagination, perPage]
+    );
 
     return h(
       'div',
@@ -24,11 +34,7 @@ module.exports = function (source) {
           'div',
           { 'class': 'col-md-6' },
           [normalFilter]
-        ), h(
-          'div',
-          { 'class': 'col-md-6' },
-          [dropdownPagination, perPage]
-        )]
+        ), perPageHolder]
       ), h(
         'table',
         { 'class': 'VueTables__table table ' + this.opts.skin },

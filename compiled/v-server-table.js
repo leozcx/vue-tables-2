@@ -65,12 +65,13 @@ exports.install = function (Vue, globalOptions, useVuex, customTemplate) {
         this.initOrderBy(this.Columns[0]);
       }
 
+      if (this.options.fetchDataOnCreated === false) return;
+
       if (!this.vuex) {
         this.customQueries = this.initCustomFilters();
       }
 
       this.getData(true).then(function (response) {
-
         var data = this.getResponseData(response);
         this.setData(this.opts.responseAdapter(data));
 
