@@ -28,6 +28,8 @@ This Vue package offers an easy and intuitive way of displaying Bootstrap-styled
 
 Note: Users of VueJS 1 Please use [this](https://github.com/matfish2/vue-tables) package instead.
 
+Note: As of version 0.4.0 the `childRowKey` option has been replaced by the more generic `uniqueKey` option.
+
 - [Dependencies](#dependencies)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -39,59 +41,49 @@ Note: Users of VueJS 1 Please use [this](https://github.com/matfish2/vue-tables)
 - [Events](#events)
 - [Custom Filters](#custom-filters)
 - [List Filters](#list-filters)
+- [Custom Sorting](#custom-sotring)
 - [Options](#options)
+- [Issues Policy](#issues-policy)
 
 # Dependencies
 
 * Vue.js (>=2.0). Required.
 * Vuex (>=2.0). Optional.
 * Bootstrap (CSS). Optional.
-* vue-resource (>=0.9.0) (server-side component only)
+* axios OR vue-resource (>=0.9.0) OR jQuery (server-side component only)
 
 # Installation
-
-Compile the code using a module bundler, such as webpack or browserify, and the [vue jsx transform](https://github.com/vuejs/babel-plugin-transform-vue-jsx)
 
     npm install vue-tables-2
 
 Require the script:
 
-    var VueTables = require('vue-tables-2');
-
-Webpack users, use the following setup to compile the package's jsx files:
-
-```js
-loaders: [
-    {
-        test: /\.jsx?$/,
-        loader: 'babel',
-        exclude: /node_modules(?!\/(vue-tables-2|vue-pagination-2))/
-    },
-]
-```
+    import {ServerTable, ClientTable, Event} from 'vue-tables-2';
 
 # Usage
 
 ## Register the component(s)
 
-    Vue.use(VueTables.client, [options], [useVuex], [customTemplate]);
+    Vue.use(ClientTable, [options], [useVuex], [customTemplate]);
 
-  Or/And
+Or/And:
 
-    Vue.use(require('vue-resource'));
-    Vue.use(VueTables.server, [options], [useVuex], [customTemplate]);
+    Vue.use(ServerTable, [options], [useVuex], [customTemplate]);
 
  The third argument is a boolean, indicating whether to use `vuex` for state management, or manage state on the component itself.
  If you set it to `true` you must add a `name` prop to your table, which will be used to to register a module on your store.
  Use `vue-devtools` to look under the hood and see the current state.
 
 The fourth argument allows you to pass a custom template for the entire table.
-You can find the main template file under `lib/template.jsx`.
+You can find the main template file under `lib/template.js`, which in turn requires the partials in the `template` folder.
+The template is written using `jsx`, so you will need a [jsx compiler](https://github.com/vuejs/babel-plugin-transform-vue-jsx) to modify it (the package is using the compiled version under the `compiled` folder).
 Copy it to your project and modify to your needs.
 
-If you want to listen for events, which require more than child-parent communication, and you are not using `vuex`, require the event bus:
+Note: The template file is a function that receives a `source` parameter (`client` or `server`). E.g:
 
-    var bus = require('vue-tables-2/lib/bus');
+```js
+Vue.use(ClientTable, {}, false, require('./template.js')('client'))
+```
 
 ## Client Side
 
@@ -170,18 +162,21 @@ Note: If you are calling a foreign API or simply want to use your own keys, refe
 # Templates
 
 Templates allow you to wrap your cells with vue-compiled HTML. Their syntax is similar to that of `render` functions, as it leverages the virtual DOM to bind the templates into the main table template.
-It is recommended to use JSX, which closely resembles HTML, to write the templates.
+It is recommended to use JSX, which closely resembles HTML, to write the templates (To compile jsx you need to install the [vue jsx transform](https://github.com/vuejs/babel-plugin-transform-vue-jsx)).
 
 E.g.:
 
-      options:{
-      ...
-        templates: {
-            erase: function(h, row) {
-               return <delete id={row.id}></delete>
+      data : {
+          columns:['erase'],
+          options:{
+          ...
+            templates: {
+                erase: function(h, row) {
+                   return <delete id={row.id}></delete>
+              }
+            }
+          ...
           }
-        }
-      ...
       }
 
 The first parameter is the `h` scope used to compile the element. It MUST be called `h`.
@@ -197,8 +192,7 @@ edit.jsx
 
 app.vue
 
-import edit from 'edit.jsx'
-
+    import edit from 'edit.jsx'
     <script>
     templates:{
        edit
@@ -227,6 +221,28 @@ A Second option to for creating templates is to encapsulate the template within 
       ...
       }
 
+This method allows you to also use single page .vue files for displaying the template data
+E.g:
+edit.vue
+
+    <template>
+        <a class="fa fa-edit" href="#/{{ data.id }}/edit">Edit</a>
+    </template>
+    <script>
+        export default {
+            props:['data'],
+        }
+    </script>
+
+app.vue
+
+    import edit from 'edit.vue'
+    <script>
+    templates:{
+       edit
+    }
+    </script>
+
 **Important**:
 * To use components in your templates they must be declared **globally** using `Vue.component()`.
 * Templates must be declared in the `columns` prop
@@ -237,7 +253,7 @@ Note: Don't include HTML directly in your dataset, as it will be parsed as plain
 
 Child rows allow for a custom designed output area, namely a hidden child row underneath each row, whose content you are free to set yourself.
 When using the `childRow` option you must pass a unqiue `id` property for each row, which is used to track the current state.
-If your identifer key is not `id`, use the `childRowKey` option to set it.
+If your identifer key is not `id`, use the `uniqueKey` option to set it.
 
 The syntax is identincal to that of templates:
 
@@ -277,10 +293,6 @@ Example styling (also found in `style.css`):
 .VueTables__child-row-toggler--open::before  {
     content: "-";
 }
-
-.VueTables__child-row--closed {
-    display: none;
-}
 ```
 
 You can also trigger the child row toggler programmtically. E.g, to toggle the row with an id of 4:
@@ -294,6 +306,9 @@ this.$refs.myTable.toggleChildRow(4); // replace myTable with your own ref
 Call methods on your instance using the [`ref`](http://vuejs.org/api/#ref) attribute.
 
 * `setPage(page)`
+* `setLimit(recordsPerPage)`
+* `setOrder(column, isAscending)`
+* `setFilter(query)` - `query` should be a string, or an object if `filterByColumn` is set to `true`.
 * `refresh()` Server component only
 
 ### Events
@@ -302,9 +317,9 @@ Using Custom Events (For child-parent communication):
 
     <v-server-table :columns="columns" url="/getData" @loaded="onLoaded"></v-server-table>
 
-Using an event bus:
+Using the event bus:
 
-      bus.$on('vue-tables.loaded', function(data) {
+      Event.$on('vue-tables.loaded', function(data) {
           // Do something
       });
 
@@ -332,7 +347,9 @@ Fires off if the server returns an invalid code. Sends through the error
 
 `vue-tables.row-click` | `tableName/ROW_CLICK`
 
-Fires off after a row was clicked. sends through the row
+Fires off after a row was clicked. sends through the row.
+When using the client component, if you want to recieve the *original* row, so that it can be directly mutated, you must have a unique row identifier.
+The key defaults to `id`, but can be changed using the `uniqueKey` option.
 
 # Custom Filters
 
@@ -354,7 +371,7 @@ A. use the `customFilters` option to declare your filters, following this syntax
 B.
 * Using the event bus:
 
-          bus.$emit('vue-tables.filter::alphabet', query);
+          Event.$emit('vue-tables.filter::alphabet', query);
 
 * Using `vuex`:
 
@@ -370,11 +387,12 @@ B. the same as in the client component.
 
 # List Filters
 
-When filtering by column, the `listColumns` option allows for filtering columns whose values are part of a list, using a select box instead of the default free-text filter.
+When filtering by column (option `filterByColumn:true`), the `listColumns` option allows for filtering columns whose values are part of a list, using a select box instead of the default free-text filter.
 
 For example:
 
       options: {
+        filterByColumn:true,
         listColumns:{
           animal: [
             {id:1, text:'Dog'},
@@ -387,6 +405,27 @@ For example:
 
 The values of this column should correspond to the `id`'s passed to the list.
 They will be automatically converted to their textual representation.
+
+# Custom Sorting (Client Component)
+
+Sometimes you may one to override the default sorting logic which is applied uniformly to all columns.
+To do so use the `customSorting` option. This is an object that recieves custom logic for specific columns.
+E.g, to sort the `name` column by the last character:
+
+```js
+    customSorting:{
+             name: function(ascending) {
+              return function(a, b) {
+                 var lastA = a.name[a.name.length-1].toLowerCase();
+                 var lastB = b.name[b.name.length-1].toLowerCase();
+
+                 if (ascending)
+                   return lastA <= lastB?1:-1;
+
+               return lastA >= lastB?1:-1;
+           }
+       }
+```
 
 # Options
 
