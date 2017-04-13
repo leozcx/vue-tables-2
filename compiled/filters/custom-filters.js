@@ -1,6 +1,10 @@
 "use strict";
 
-module.exports = function (data, customFilters, customQueries) {
+module.exports = function () {
+  var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var customFilters = arguments[1];
+  var customQueries = arguments[2];
+
 
   var passing;
 
