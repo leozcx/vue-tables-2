@@ -11,7 +11,7 @@ module.exports = function (promiseOnly) {
 
   var data = (_data = {}, _defineProperty(_data, keys.query, this.query), _defineProperty(_data, keys.limit, this.limit), _defineProperty(_data, keys.orderBy, this.orderBy.column), _defineProperty(_data, keys.ascending, this.orderBy.ascending ? 1 : 0), _defineProperty(_data, keys.page, this.page), _defineProperty(_data, keys.byColumn, this.opts.filterByColumn ? 1 : 0), _data);
 
-  data = merge(data, this.opts.params, this.customQueries);
+  data = merge(data, this.opts.params, this.options.params, this.customQueries);
 
   this.dispatch('loading', data);
 
