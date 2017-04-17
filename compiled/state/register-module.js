@@ -17,5 +17,9 @@ module.exports = function (self) {
       state: (0, _state2.default)(self),
       mutations: (0, _mutations2.default)(self)
     });
+  } else {
+    // TODO see if there is any better way
+    // all info in store should be reset, now we only find page, there might be more
+    self.$store.state[self.name] = Object.assign({}, self.$store.state[self.name], { page: 1 });
   }
 };
